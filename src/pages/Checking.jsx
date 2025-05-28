@@ -40,7 +40,7 @@ function Checking() {
             }
         } else if (step === 1) {
             try {
-                const res = await fetch(`http://localhost:3001/api/checkin/${code}`
+                const res = await fetch(`https://be-checkin.onrender.com/api/checkin/${code}`
                 );
                 const result = await res.json();
                 if (result.success) {
