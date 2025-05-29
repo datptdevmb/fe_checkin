@@ -72,7 +72,17 @@ function JudgeScoringPage() {
                 body: JSON.stringify({ [sectionId]: payload }),
             });
 
-            const result = await res.json();
+            const rawText = await res.text(); // Đọc phản hồi thô
+            console.log("📩 Raw response:", rawText);
+
+            let result;
+            try {
+                result = JSON.parse(rawText); // Cố gắng parse
+            } catch (parseErr) {
+                console.error("❌ JSON parse lỗi:", parseErr);
+                alert("❌ Server trả về dữ liệu không hợp lệ (không phải JSON).");
+                return;
+            }
 
             if (result.success) {
                 alert(`✅ Đã gửi điểm phần ${sectionId === "part1" ? "Hội thảo" : "Karaoke"} cho đội ${activeTeam}`);
@@ -87,9 +97,10 @@ function JudgeScoringPage() {
                 alert("❌ Gửi thất bại: " + result.message);
             }
         } catch (err) {
-            console.error("Lỗi khi gửi:", err);
-            alert("❌ Gửi điểm thất bại (lỗi kết nối).");
+            console.error("❌ Lỗi kết nối khi gửi điểm:", err);
+            alert("❌ Gửi điểm thất bại (lỗi kết nối hoặc server không phản hồi).");
         }
+
     };
 
     const teamScores = scores[activeTeam] || {};
