@@ -13,6 +13,7 @@ function Checking() {
     const [toastMsg, setToastMsg] = useState(null);
     const [employeeCode, setEmployeeCode] = useState("");
     const [employeeInfo, setEmployeeInfo] = useState(null);
+    const [loading, setLoading] = useState(false); // ✅ loading state
 
     const showToast = (msg) => {
         setToastMsg(msg);
@@ -21,13 +22,12 @@ function Checking() {
 
     const goNext = async () => {
         const code = employeeCode.trim();
-
         if (step === 0) {
             if (!code) return showToast("⚠️ Vui lòng nhập mã nhân viên.");
+            setLoading(true);
             try {
                 const res = await fetch(`https://be-checkin.onrender.com/api/employees/${code}`);
                 const result = await res.json();
-
                 if (result.success) {
                     setEmployeeInfo(result.data);
                     setStep(1);
@@ -37,11 +37,13 @@ function Checking() {
             } catch (err) {
                 console.error(err);
                 showToast("🚫 Không kết nối được đến server.");
+            } finally {
+                setLoading(false);
             }
         } else if (step === 1) {
+            setLoading(true);
             try {
-                const res = await fetch(`https://be-checkin.onrender.com/api/checkin/${code}`
-                );
+                const res = await fetch(`https://be-checkin.onrender.com/api/checkin/${code}`);
                 const result = await res.json();
                 if (result.success) {
                     showToast("✅ Check-in thành công!");
@@ -52,6 +54,8 @@ function Checking() {
             } catch (err) {
                 console.error(err);
                 showToast("🚫 Gửi dữ liệu check-in thất bại.");
+            } finally {
+                setLoading(false);
             }
         } else {
             setStep((prev) => Math.min(prev + 1, steps.length - 1));
@@ -135,11 +139,26 @@ function Checking() {
                 )}
 
                 <div className="mt-6 flex justify-between">
-                    <button onClick={goBack} disabled={step === 0} className="text-gray-500 disabled:opacity-30">
+                    <button
+                        onClick={goBack}
+                        disabled={step === 0 || loading}
+                        className="text-gray-500 disabled:opacity-30"
+                    >
                         Quay lại
                     </button>
-                    <button onClick={goNext} className="bg-[#e61e24] text-white px-4 py-2 rounded">
-                        {step === steps.length - 1 ? "Xong" : "Tiếp tục"}
+                    <button
+                        onClick={goNext}
+                        disabled={loading}
+                        className="bg-[#e61e24] text-white px-4 py-2 rounded flex items-center gap-2 disabled:opacity-60"
+                    >
+                        {loading ? (
+                            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="4" />
+                                <path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8v8z" />
+                            </svg>
+                        ) : (
+                            step === steps.length - 1 ? "Xong" : "Tiếp tục"
+                        )}
                     </button>
                 </div>
             </div>

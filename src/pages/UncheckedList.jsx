@@ -15,11 +15,11 @@ function UncheckedList() {
                 .finally(() => setLoading(false));
         };
 
-        fetchData(); // Gọi lần đầu khi mount
+        fetchData(); 
 
-        const interval = setInterval(fetchData, 30000); // Gọi lại mỗi 15 giây
+        const interval = setInterval(fetchData, 30000); 
 
-        return () => clearInterval(interval); // Dọn dẹp khi component bị unmount
+        return () => clearInterval(interval); 
     }, []);
     return (
         <div className="min-h-screen p-6 bg-gray-50">
