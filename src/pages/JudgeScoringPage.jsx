@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import judges from "../data/judges";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 
 const sections = [
     {
@@ -66,23 +67,17 @@ function JudgeScoringPage() {
         }
 
         try {
-            const res = await fetch(`https://be-checkin.onrender.com/api/score/${activeTeam}/${id}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ [sectionId]: payload }),
-            });
+            const res = await axios.post(
+                `https://be-checkin.onrender.com/api/score/${activeTeam}/${id}`,
+                { [sectionId]: payload },
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
 
-            const rawText = await res.text(); // Đọc phản hồi thô
-            console.log("📩 Raw response:", rawText);
-
-            let result;
-            try {
-                result = JSON.parse(rawText); // Cố gắng parse
-            } catch (parseErr) {
-                console.error("❌ JSON parse lỗi:", parseErr);
-                alert("❌ Server trả về dữ liệu không hợp lệ (không phải JSON).");
-                return;
-            }
+            const result = res.data;
 
             if (result.success) {
                 alert(`✅ Đã gửi điểm phần ${sectionId === "part1" ? "Hội thảo" : "Karaoke"} cho đội ${activeTeam}`);
@@ -97,10 +92,17 @@ function JudgeScoringPage() {
                 alert("❌ Gửi thất bại: " + result.message);
             }
         } catch (err) {
-            console.error("❌ Lỗi kết nối khi gửi điểm:", err);
-            alert("❌ Gửi điểm thất bại (lỗi kết nối hoặc server không phản hồi).");
-        }
+            console.error("❌ Lỗi khi gửi điểm:", err);
 
+            if (err.response) {
+                // Server trả lỗi có phản hồi JSON
+                alert("❌ Gửi thất bại: " + (err.response.data?.message || "Lỗi không xác định từ server."));
+            } else if (err.request) {
+                alert("❌ Không nhận được phản hồi từ server.");
+            } else {
+                alert("❌ Lỗi xảy ra: " + err.message);
+            }
+        }
     };
 
     const teamScores = scores[activeTeam] || {};
