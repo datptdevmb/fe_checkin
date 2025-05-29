@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
 
+function getJudgeColor(name) {
+    const colors = [
+        "#FDE68A", "#A7F3D0", "#BFDBFE", "#FCA5A5", "#DDD6FE", "#FCD34D"
+    ];
+    const hash = [...name].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    return colors[hash % colors.length];
+}
+
 function CheckedScorePage() {
     const [scores, setScores] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -18,7 +26,9 @@ function CheckedScorePage() {
 
     return (
         <div className="p-4 sm:p-6 max-w-6xl mx-auto">
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 text-center sm:text-left">📊 Bảng điểm đã chấm</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 text-center sm:text-left">
+                📊 Bảng điểm đã chấm
+            </h2>
 
             {loading ? (
                 <p className="text-center">⏳ Đang tải dữ liệu...</p>
@@ -44,7 +54,15 @@ function CheckedScorePage() {
                             {scores.map((row, idx) => (
                                 <tr key={idx} className="hover:bg-gray-50">
                                     <td className="border px-3 py-2 text-center">{row["Đội"]}</td>
-                                    <td className="border px-3 py-2">{row["Giám khảo"]}</td>
+                                    <td
+                                        className="border px-3 py-2 font-semibold text-center"
+                                        style={{
+                                            backgroundColor: getJudgeColor(row["Giám khảo"]),
+                                            color: "#1f2937",
+                                        }}
+                                    >
+                                        {row["Giám khảo"]}
+                                    </td>
                                     <td className="border px-3 py-2 text-center">{row["📚 Tính mới"]}</td>
                                     <td className="border px-3 py-2 text-center">{row["📚 Tính khả thi"]}</td>
                                     <td className="border px-3 py-2 text-center">{row["📚 Tính hiệu quả"]}</td>
@@ -52,7 +70,9 @@ function CheckedScorePage() {
                                     <td className="border px-3 py-2 text-center">{row["🎯 Phù hợp chủ đề"]}</td>
                                     <td className="border px-3 py-2 text-center">{row["🎯 Sáng tạo"]}</td>
                                     <td className="border px-3 py-2 text-center">{row["🎯 Biểu cảm"]}</td>
-                                    <td className="border px-3 py-2 font-bold text-center text-red-600">{row["Tổng điểm"]}</td>
+                                    <td className="border px-3 py-2 font-bold text-center text-red-600">
+                                        {row["Tổng điểm"]}
+                                    </td>
                                     <td className="border px-3 py-2 whitespace-nowrap">{row["Thời gian"]}</td>
                                 </tr>
                             ))}
