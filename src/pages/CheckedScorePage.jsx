@@ -16,9 +16,7 @@ function CheckedScorePage() {
         fetch("https://be-checkin.onrender.com/api/scores")
             .then(res => res.json())
             .then(data => {
-                if (data.success) {
-                    setScores(data.data);
-                }
+                if (data.success) setScores(data.data);
             })
             .catch(err => console.error("Lỗi khi tải điểm:", err))
             .finally(() => setLoading(false));
@@ -51,31 +49,24 @@ function CheckedScorePage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {scores.map((row, idx) => (
-                                <tr key={idx} className="hover:bg-gray-50">
-                                    <td className="border px-3 py-2 text-center">{row["Đội"]}</td>
-                                    <td
-                                        className="border px-3 py-2 font-semibold text-center"
-                                        style={{
-                                            backgroundColor: getJudgeColor(row["Giám khảo"]),
-                                            color: "#1f2937",
-                                        }}
-                                    >
-                                        {row["Giám khảo"]}
-                                    </td>
-                                    <td className="border px-3 py-2 text-center">{row["📚 Tính mới"]}</td>
-                                    <td className="border px-3 py-2 text-center">{row["📚 Tính khả thi"]}</td>
-                                    <td className="border px-3 py-2 text-center">{row["📚 Tính hiệu quả"]}</td>
-                                    <td className="border px-3 py-2 text-center">{row["📚 Phong cách trình bày"]}</td>
-                                    <td className="border px-3 py-2 text-center">{row["🎯 Phù hợp chủ đề"]}</td>
-                                    <td className="border px-3 py-2 text-center">{row["🎯 Sáng tạo"]}</td>
-                                    <td className="border px-3 py-2 text-center">{row["🎯 Biểu cảm"]}</td>
-                                    <td className="border px-3 py-2 font-bold text-center text-red-600">
-                                        {row["Tổng điểm"]}
-                                    </td>
-                                    <td className="border px-3 py-2 whitespace-nowrap">{row["Thời gian"]}</td>
-                                </tr>
-                            ))}
+                            {scores.map((row, idx) => {
+                                const bg = getJudgeColor(row["Giám khảo"]);
+                                return (
+                                    <tr key={idx} style={{ backgroundColor: bg }} className="hover:brightness-105 transition">
+                                        <td className="border px-3 py-2 text-center">{row["Đội"]}</td>
+                                        <td className="border px-3 py-2 font-semibold text-center">{row["Giám khảo"]}</td>
+                                        <td className="border px-3 py-2 text-center">{row["📚 Tính mới"]}</td>
+                                        <td className="border px-3 py-2 text-center">{row["📚 Tính khả thi"]}</td>
+                                        <td className="border px-3 py-2 text-center">{row["📚 Tính hiệu quả"]}</td>
+                                        <td className="border px-3 py-2 text-center">{row["📚 Phong cách trình bày"]}</td>
+                                        <td className="border px-3 py-2 text-center">{row["🎯 Phù hợp chủ đề"]}</td>
+                                        <td className="border px-3 py-2 text-center">{row["🎯 Sáng tạo"]}</td>
+                                        <td className="border px-3 py-2 text-center">{row["🎯 Biểu cảm"]}</td>
+                                        <td className="border px-3 py-2 font-bold text-center text-red-600">{row["Tổng điểm"]}</td>
+                                        <td className="border px-3 py-2 whitespace-nowrap">{row["Thời gian"]}</td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
