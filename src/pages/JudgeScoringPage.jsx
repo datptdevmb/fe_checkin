@@ -33,12 +33,26 @@ function JudgeScoringPage() {
     const judge = judges.find(j => j.id === parseInt(id));
     const [activeTeam, setActiveTeam] = useState(1);
     const [scores, setScores] = useState({});
-    const [submitted, setSubmitted] = useState({}); // Theo dõi các phần đã gửi
+    const [submitted, setSubmitted] = useState({});
 
     const handleScoreChange = (sectionId, criterionId, value, max) => {
-        if (!/^\d+$/.test(value)) return; // chỉ cho số nguyên dương
+        if (value === "") {
+            // Cho phép xóa trắng
+            setScores(prev => ({
+                ...prev,
+                [activeTeam]: {
+                    ...(prev[activeTeam] || {}),
+                    [sectionId]: {
+                        ...(prev[activeTeam]?.[sectionId] || {}),
+                        [criterionId]: "",
+                    }
+                }
+            }));
+            return;
+        }
+
         const intValue = parseInt(value);
-        if (intValue < 0 || intValue > max) return;
+        if (isNaN(intValue) || intValue < 0 || intValue > max) return;
 
         setScores(prev => ({
             ...prev,
@@ -95,7 +109,6 @@ function JudgeScoringPage() {
             console.error("❌ Lỗi khi gửi điểm:", err);
 
             if (err.response) {
-                // Server trả lỗi có phản hồi JSON
                 alert("❌ Gửi thất bại: " + (err.response.data?.message || "Lỗi không xác định từ server."));
             } else if (err.request) {
                 alert("❌ Không nhận được phản hồi từ server.");
@@ -110,7 +123,7 @@ function JudgeScoringPage() {
 
     const total = sections.reduce((sum, section) => {
         const sectionScores = teamScores[section.id] || {};
-        return sum + Object.values(sectionScores).reduce((a, b) => a + b, 0);
+        return sum + Object.values(sectionScores).reduce((a, b) => a + (parseFloat(b) || 0), 0);
     }, 0);
 
     return (
@@ -129,7 +142,7 @@ function JudgeScoringPage() {
                             key={teamId}
                             onClick={() => setActiveTeam(teamId)}
                             className={`px-5 py-2 rounded-full text-sm font-semibold shadow transition-all duration-200 border 
-                            ${activeTeam === teamId
+                                ${activeTeam === teamId
                                     ? "bg-[#e61e24] text-white border-[#e61e24]"
                                     : "bg-white text-gray-800 hover:bg-blue-50 border-gray-300"
                                 }`}
@@ -163,9 +176,9 @@ function JudgeScoringPage() {
 
                                             <input
                                                 type="number"
-                                                pattern="\d*"
                                                 min="0"
                                                 max={c.max}
+                                                inputMode="numeric"
                                                 disabled={submittedParts[section.id]}
                                                 value={
                                                     teamScores[section.id]?.[c.id] !== undefined
