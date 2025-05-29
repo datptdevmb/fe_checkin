@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import judges from "../data/judges";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
+import { Loader2 } from "lucide-react";
 
 const sections = [
     {
@@ -34,6 +35,13 @@ function JudgeScoringPage() {
     const [activeTeam, setActiveTeam] = useState(1);
     const [scores, setScores] = useState({});
     const [submitted, setSubmitted] = useState({});
+    const [loadingSubmit, setLoadingSubmit] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    const showToast = (message, type = "info") => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
 
     const handleScoreChange = (sectionId, criterionId, value, max) => {
         if (value === "") {
@@ -69,18 +77,18 @@ function JudgeScoringPage() {
 
     const handleSubmitSection = async (sectionId) => {
         const payload = scores[activeTeam]?.[sectionId];
-
         if (!payload || Object.keys(payload).length === 0) {
-            alert("⚠️ Bạn chưa nhập điểm phần này.");
+            showToast("⚠️ Bạn chưa nhập điểm phần này.", "warning");
             return;
         }
 
         const isSent = submitted[activeTeam]?.[sectionId];
         if (isSent) {
-            alert("⚠️ Bạn đã gửi điểm phần này rồi.");
+            showToast("⚠️ Bạn đã gửi điểm phần này rồi.", "warning");
             return;
         }
 
+        setLoadingSubmit(true);
         try {
             const res = await axios.post(
                 `https://be-checkin.onrender.com/api/score/${activeTeam}/${id}`,
@@ -91,7 +99,7 @@ function JudgeScoringPage() {
             const result = res.data;
 
             if (result.success) {
-                alert(`✅ Đã gửi điểm phần ${sectionId === "part1" ? "Hội thảo" : "Karaoke"} cho đội ${activeTeam}`);
+                showToast(`✅ Gửi điểm thành công cho đội ${activeTeam}`, "success");
                 setSubmitted(prev => ({
                     ...prev,
                     [activeTeam]: {
@@ -100,11 +108,13 @@ function JudgeScoringPage() {
                     }
                 }));
             } else {
-                alert("❌ Gửi thất bại: " + result.message);
+                showToast("❌ Gửi thất bại: " + result.message, "error");
             }
         } catch (err) {
             console.error("❌ Lỗi khi gửi điểm:", err);
-            alert("❌ Lỗi gửi điểm. Vui lòng thử lại.");
+            showToast("❌ Lỗi gửi điểm. Vui lòng thử lại.", "error");
+        } finally {
+            setLoadingSubmit(false);
         }
     };
 
@@ -118,7 +128,11 @@ function JudgeScoringPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-tr from-[#f0f4ff] to-[#fefefe] py-12 px-4 font-sans">
-            <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl p-10">
+            <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl p-10 relative">
+                {toast && (
+                    <div className={`absolute top-4 right-4 px-4 py-2 rounded shadow text-white text-sm font-semibold z-50 ${toast.type === "success" ? "bg-green-500" : toast.type === "error" ? "bg-red-500" : "bg-yellow-500"}`}>{toast.message}</div>
+                )}
+
                 <div className="flex items-center gap-6 mb-8">
                     <div>
                         <h2 className="text-3xl font-extrabold text-gray-800">Giám khảo: {judge.name}</h2>
@@ -171,9 +185,10 @@ function JudgeScoringPage() {
 
                                 <button
                                     onClick={() => handleSubmitSection(section.id)}
-                                    disabled={submittedParts[section.id]}
-                                    className={`mt-6 font-semibold px-4 py-2 rounded-full transition ${submittedParts[section.id] ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-[#e61e24] text-white hover:bg-red-700"}`}
+                                    disabled={submittedParts[section.id] || loadingSubmit}
+                                    className={`mt-6 font-semibold px-4 py-2 rounded-full transition flex items-center justify-center gap-2 ${submittedParts[section.id] ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-[#e61e24] text-white hover:bg-red-700"}`}
                                 >
+                                    {loadingSubmit && !submittedParts[section.id] && <Loader2 size={16} className="animate-spin" />}
                                     {submittedParts[section.id] ? "Đã chấm ✅" : `Gửi điểm ${section.id === "part1" ? "Hội thảo" : "Karaoke"}`}
                                 </button>
                             </div>
