@@ -37,7 +37,6 @@ function JudgeScoringPage() {
 
     const handleScoreChange = (sectionId, criterionId, value, max) => {
         if (value === "") {
-            // Cho phép xóa trắng
             setScores(prev => ({
                 ...prev,
                 [activeTeam]: {
@@ -51,8 +50,10 @@ function JudgeScoringPage() {
             return;
         }
 
+        if (!/^\d+$/.test(value)) return;
+
         const intValue = parseInt(value);
-        if (isNaN(intValue) || intValue < 0 || intValue > max) return;
+        if (intValue < 0 || intValue > max) return;
 
         setScores(prev => ({
             ...prev,
@@ -84,11 +85,7 @@ function JudgeScoringPage() {
             const res = await axios.post(
                 `https://be-checkin.onrender.com/api/score/${activeTeam}/${id}`,
                 { [sectionId]: payload },
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                }
+                { headers: { "Content-Type": "application/json" } }
             );
 
             const result = res.data;
@@ -107,14 +104,7 @@ function JudgeScoringPage() {
             }
         } catch (err) {
             console.error("❌ Lỗi khi gửi điểm:", err);
-
-            if (err.response) {
-                alert("❌ Gửi thất bại: " + (err.response.data?.message || "Lỗi không xác định từ server."));
-            } else if (err.request) {
-                alert("❌ Không nhận được phản hồi từ server.");
-            } else {
-                alert("❌ Lỗi xảy ra: " + err.message);
-            }
+            alert("❌ Lỗi gửi điểm. Vui lòng thử lại.");
         }
     };
 
@@ -141,11 +131,7 @@ function JudgeScoringPage() {
                         <button
                             key={teamId}
                             onClick={() => setActiveTeam(teamId)}
-                            className={`px-5 py-2 rounded-full text-sm font-semibold shadow transition-all duration-200 border 
-                                ${activeTeam === teamId
-                                    ? "bg-[#e61e24] text-white border-[#e61e24]"
-                                    : "bg-white text-gray-800 hover:bg-blue-50 border-gray-300"
-                                }`}
+                            className={`px-5 py-2 rounded-full text-sm font-semibold shadow transition-all duration-200 border ${activeTeam === teamId ? "bg-[#e61e24] text-white border-[#e61e24]" : "bg-white text-gray-800 hover:bg-blue-50 border-gray-300"}`}
                         >
                             Đội {teamId}
                         </button>
@@ -162,10 +148,7 @@ function JudgeScoringPage() {
                         className="space-y-8"
                     >
                         {sections.map((section) => (
-                            <div
-                                key={section.id}
-                                className="bg-blue-50 border-l-4 border-red-400 rounded-xl p-6 shadow-inner"
-                            >
+                            <div key={section.id} className="bg-blue-50 border-l-4 border-red-400 rounded-xl p-6 shadow-inner">
                                 <h3 className="text-xl font-bold text-blue-700 mb-4">{section.title}</h3>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {section.criteria.map((c) => (
@@ -173,21 +156,13 @@ function JudgeScoringPage() {
                                             <label className="mb-1 text-gray-700 font-medium">
                                                 {c.label} <span className="text-sm text-gray-500">(tối đa {c.max})</span>
                                             </label>
-
                                             <input
-                                                type="number"
-                                                min="0"
-                                                max={c.max}
+                                                type="text"
                                                 inputMode="numeric"
+                                                pattern="[0-9]*"
                                                 disabled={submittedParts[section.id]}
-                                                value={
-                                                    teamScores[section.id]?.[c.id] !== undefined
-                                                        ? teamScores[section.id][c.id]
-                                                        : ""
-                                                }
-                                                onChange={(e) =>
-                                                    handleScoreChange(section.id, c.id, e.target.value, c.max)
-                                                }
+                                                value={teamScores[section.id]?.[c.id] ?? ""}
+                                                onChange={(e) => handleScoreChange(section.id, c.id, e.target.value, c.max)}
                                                 className="border border-gray-300 rounded-lg px-4 py-2 text-right font-semibold text-gray-800 focus:ring-2 focus:ring-blue-400 focus:outline-none shadow-sm"
                                             />
                                         </div>
@@ -197,15 +172,9 @@ function JudgeScoringPage() {
                                 <button
                                     onClick={() => handleSubmitSection(section.id)}
                                     disabled={submittedParts[section.id]}
-                                    className={`mt-6 font-semibold px-4 py-2 rounded-full transition 
-                                        ${submittedParts[section.id]
-                                            ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                                            : "bg-[#e61e24] text-white hover:bg-red-700"
-                                        }`}
+                                    className={`mt-6 font-semibold px-4 py-2 rounded-full transition ${submittedParts[section.id] ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-[#e61e24] text-white hover:bg-red-700"}`}
                                 >
-                                    {submittedParts[section.id]
-                                        ? "Đã chấm ✅"
-                                        : `Gửi điểm ${section.id === "part1" ? "Hội thảo" : "Karaoke"}`}
+                                    {submittedParts[section.id] ? "Đã chấm ✅" : `Gửi điểm ${section.id === "part1" ? "Hội thảo" : "Karaoke"}`}
                                 </button>
                             </div>
                         ))}
